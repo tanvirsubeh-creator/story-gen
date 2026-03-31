@@ -8,7 +8,7 @@ exports.handler = async (event) => {
   if (!renderId) return { statusCode: 400, headers, body: JSON.stringify({ error: "No ID" }) };
 
   try {
-    const res = await fetch(`https://api.shotstack.io/stage/render/${renderId}`, {
+    const res = await fetch(`https://api.shotstack.io/v1/render/${renderId}`, {
       headers: { "x-api-key": process.env.SHOTSTACK_API_KEY },
     });
     const data = await res.json();
