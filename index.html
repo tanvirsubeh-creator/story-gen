@@ -1,292 +1,69 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viral Story Generator</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-```
-body {
-  font-family: 'Arial', sans-serif;
-  color: white;
-  overflow-x: hidden;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #0a0a0a;
-}
-
-#video-bg {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  object-fit: cover;
-  z-index: -1;
-  filter: brightness(35%);
-}
-
-.container {
-  background: rgba(0,0,0,0.75);
-  padding: 36px 32px;
-  border-radius: 20px;
-  width: 90%;
-  max-width: 500px;
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.08);
-  text-align: center;
-}
-
-h1 { font-size: 26px; margin-bottom: 24px; letter-spacing: 0.5px; }
-
-button {
-  padding: 14px 28px;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
-  border: none;
-  border-radius: 50px;
-  transition: all 0.2s;
-  letter-spacing: 1px;
-}
-
-#genBtn {
-  background: linear-gradient(to right, #0062ff, #33aaff);
-  color: white;
-  width: 100%;
-}
-
-#genBtn:hover:not(:disabled) { transform: scale(1.03); }
-#genBtn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-#exportBtn {
-  background: linear-gradient(to right, #00c853, #69f0ae);
-  color: #000;
-  width: 100%;
-  margin-top: 12px;
-  display: none;
-}
-
-#exportBtn:hover { transform: scale(1.03); }
-
-#status {
-  margin-top: 16px;
-  font-size: 14px;
-  color: #aaa;
-  min-height: 20px;
-}
-
-.progress-bar-wrap {
-  background: rgba(255,255,255,0.1);
-  border-radius: 50px;
-  height: 6px;
-  margin-top: 12px;
-  display: none;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(to right, #0062ff, #33aaff);
-  border-radius: 50px;
-  transition: width 0.5s ease;
-}
-
-#storyCard {
-  display: none;
-  margin-top: 20px;
-  text-align: left;
-  background: rgba(255,255,255,0.05);
-  border-radius: 12px;
-  padding: 16px;
-}
-
-#storyTitle {
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 6px;
-  color: #33aaff;
-}
-
-#views {
-  font-size: 13px;
-  color: #ff4d4d;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-#scriptPreview {
-  font-size: 13px;
-  color: #ccc;
-  line-height: 1.6;
-  max-height: 120px;
-  overflow-y: auto;
-}
-
-#renderStatus {
-  margin-top: 14px;
-  font-size: 13px;
-  color: #ffcc00;
-  display: none;
-}
-```
-
+    body { font-family: sans-serif; background: #111; color: white; text-align: center; padding: 50px; }
+    .container { max-width: 500px; margin: auto; background: #222; padding: 20px; border-radius: 15px; }
+    button { padding: 10px 20px; cursor: pointer; background: #0062ff; color: white; border: none; border-radius: 5px; width: 100%; margin-top: 10px; }
+    #status { color: #aaa; margin-top: 10px; }
+    #exportBtn { background: #00c853; display: none; }
   </style>
 </head>
 <body>
 
-<video autoplay muted loop id="video-bg">
-  <source src="https://assets.mixkit.co/videos/preview/mixkit-top-view-of-a-small-mountain-river-in-the-middle-of-a-forest-42211-large.mp4" type="video/mp4">
-</video>
-
 <div class="container">
   <h1>🎭 Story Gen</h1>
-
-<button id="genBtn" onclick="generateStory()">GENERATE VIRAL STORY</button>
-
-  <div class="progress-bar-wrap" id="progressWrap">
-    <div class="progress-bar" id="progressBar"></div>
-  </div>
-
-  <p id="status">Idle</p>
-
-  <div id="storyCard">
-    <div id="storyTitle"></div>
-    <div id="views"></div>
-    <div id="scriptPreview"></div>
-  </div>
-
-  <p id="renderStatus"></p>
-
-<button id="exportBtn" onclick="downloadVideo()">⬇ EXPORT VIDEO</button>
-
+  <button id="genBtn" onclick="generateStory()">GENERATE VIDEO</button>
+  <p id="status">Ready</p>
+  <button id="exportBtn" onclick="downloadVideo()">⬇ DOWNLOAD VIDEO</button>
 </div>
 
 <script>
-  let finalVideoUrl = null;
-  let pollInterval = null;
-  let progress = 0;
+  let videoUrl = null;
 
   async function generateStory() {
-    const btn = document.getElementById('genBtn');
     const status = document.getElementById('status');
-    const progressWrap = document.getElementById('progressWrap');
-    const progressBar = document.getElementById('progressBar');
-    const storyCard = document.getElementById('storyCard');
-    const exportBtn = document.getElementById('exportBtn');
-    const renderStatus = document.getElementById('renderStatus');
-
-    btn.disabled = true;
-    exportBtn.style.display = 'none';
-    storyCard.style.display = 'none';
-    renderStatus.style.display = 'none';
-    finalVideoUrl = null;
-    progress = 0;
-
-    progressWrap.style.display = 'block';
-    progressBar.style.width = '0%';
-
-    status.innerText = 'Writing your story...';
-    animateProgress(15);
+    const genBtn = document.getElementById('genBtn');
+    genBtn.disabled = true;
+    status.innerText = "Generating story & video...";
 
     try {
-      const res = await fetch('/.netlify/functions/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: 'viral story' }),
-      });
-
+      const res = await fetch('/functions/generate', { method: 'POST' });
       const data = await res.json();
-
-      if (!res.ok || data.error) {
-        status.innerText = 'Error: ' + (data.error || 'Unknown error');
-        btn.disabled = false;
-        return;
-      }
-
-      animateProgress(50);
-      status.innerText = 'Generating voiceover...';
-
-      document.getElementById('storyTitle').innerText = data.title || '';
-      document.getElementById('views').innerText = '👁 ' + (data.views || '') + ' views';
-      document.getElementById('scriptPreview').innerText = data.script || '';
-      storyCard.style.display = 'block';
-
-      animateProgress(75);
-      status.innerText = 'Assembling your video... (this takes ~1-2 min)';
-
-      renderStatus.style.display = 'block';
-      renderStatus.innerText = '⏳ Video rendering in progress...';
-
+      
       if (data.renderId) {
-        pollForVideo(data.renderId);
+        pollStatus(data.renderId);
       } else {
-        status.innerText = 'Error: No render ID returned.';
-        btn.disabled = false;
+        status.innerText = "Error starting render.";
       }
-
-    } catch (err) {
-      status.innerText = 'Connection error: ' + err.message;
-      btn.disabled = false;
-    }
+    } catch (e) { status.innerText = "Error: " + e.message; }
   }
 
-  function animateProgress(target) {
-    progress = target;
-    document.getElementById('progressBar').style.width = target + '%';
-  }
-
-  function pollForVideo(renderId) {
-    let attempts = 0;
-    pollInterval = setInterval(async () => {
-      attempts++;
-      try {
-        const res = await fetch(`/.netlify/functions/poll?id=${renderId}`);
-        const data = await res.json();
-
-        if (data.status === 'done' && data.url) {
-          clearInterval(pollInterval);
-          finalVideoUrl = data.url;
-          animateProgress(100);
-          document.getElementById('status').innerText = '✅ Video ready!';
-          document.getElementById('renderStatus').innerText = '🎬 Your video is ready to export!';
-          document.getElementById('exportBtn').style.display = 'block';
-          document.getElementById('genBtn').disabled = false;
-        } else if (data.status === 'failed') {
-          clearInterval(pollInterval);
-          document.getElementById('status').innerText = '❌ Render failed. Try again.';
-          document.getElementById('renderStatus').style.display = 'none';
-          document.getElementById('genBtn').disabled = false;
-        } else {
-          document.getElementById('renderStatus').innerText =
-            `⏳ Still rendering... (${attempts * 5}s elapsed)`;
-        }
-      } catch (e) {
-        // keep polling
-      }
-
-      if (attempts > 60) {
-        clearInterval(pollInterval);
-        document.getElementById('status').innerText = 'Render timed out. Try again.';
+  async function pollStatus(id) {
+    const interval = setInterval(async () => {
+      const res = await fetch(`/functions/poll?id=${id}`);
+      const data = await res.json();
+      
+      if (data.status === 'done') {
+        clearInterval(interval);
+        videoUrl = data.url;
+        document.getElementById('status').innerText = "✅ Done!";
+        document.getElementById('exportBtn').style.display = 'block';
         document.getElementById('genBtn').disabled = false;
+      } else if (data.status === 'failed') {
+        clearInterval(interval);
+        document.getElementById('status').innerText = "❌ Render Failed.";
+      } else {
+        document.getElementById('status').innerText = "Cooking video... (" + data.status + ")";
       }
     }, 5000);
   }
 
   function downloadVideo() {
-    if (!finalVideoUrl) return;
-    const a = document.createElement('a');
-    a.href = finalVideoUrl;
-    a.download = 'viral-story.mp4';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    window.open(videoUrl, '_blank');
   }
 </script>
-
 </body>
 </html>
