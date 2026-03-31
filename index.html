@@ -5,88 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Story Generator</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Arial', sans-serif;
-            color: white;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            text-align: center;
-        }
-
-        #video-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: -1;
-            filter: brightness(60%);
-        }
-
-        .container {
-            background: rgba(0, 0, 0, 0.7);
-            padding: 30px;
-            border-radius: 20px;
-            backdrop-filter: blur(8px);
-            width: 85%;
-            max-width: 450px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        button {
-            padding: 15px 30px;
-            font-size: 18px;
-            cursor: pointer;
-            background: linear-gradient(to right, #3a7bd5, #00d2ff);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-weight: bold;
-            text-transform: uppercase;
-            transition: transform 0.2s;
-        }
-
+        body { margin: 0; padding: 0; font-family: 'Arial', sans-serif; color: white; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        #video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; filter: brightness(60%); }
+        .container { background: rgba(0, 0, 0, 0.7); padding: 30px; border-radius: 20px; backdrop-filter: blur(8px); width: 85%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+        button { padding: 15px 30px; font-size: 18px; cursor: pointer; background: linear-gradient(to right, #3a7bd5, #00d2ff); color: white; border: none; border-radius: 50px; font-weight: bold; text-transform: uppercase; transition: transform 0.2s; }
         button:active { transform: scale(0.95); }
         button:disabled { background: #444; cursor: not-allowed; }
-
-        #body {
-            text-align: left;
-            margin-top: 20px;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            max-height: 350px;
-            overflow-y: auto;
-            font-size: 17px;
-            padding-right: 10px;
-        }
-
+        #body { text-align: left; margin-top: 20px; line-height: 1.5; white-space: pre-wrap; max-height: 350px; overflow-y: auto; font-size: 17px; padding-right: 10px; }
         #body::-webkit-scrollbar { width: 5px; }
         #body::-webkit-scrollbar-thumb { background: #00d2ff; border-radius: 10px; }
     </style>
 </head>
 <body>
-
     <video autoplay muted loop id="video-bg">
         <source src="v24044gl0000d1mgkrfog65sk4j7nmog.mp4" type="video/mp4">
     </video>
-
     <div class="container">
         <h1 style="margin-top:0;">🎭 Story Gen</h1>
         <button id="genBtn" onclick="generateScript()">Generate Viral Story</button>
         <p id="status" style="font-size: 14px; color: #bbb;">Idle</p>
-
         <h2 id="title" style="color: #00d2ff; margin-bottom: 5px;"></h2>
         <p id="views" style="color: #ffcc00; font-weight: bold; margin: 0;"></p>
         <div id="body"></div>
     </div>
-
 <script>
 async function generateScript() {
     const genBtn = document.getElementById('genBtn');
@@ -94,48 +35,33 @@ async function generateScript() {
     const titleEl = document.getElementById('title');
     const viewsEl = document.getElementById('views');
     const bodyEl = document.getElementById('body');
-
     genBtn.disabled = true;
     status.innerText = 'Claude is writing...';
-    titleEl.innerText = '';
-    viewsEl.innerText = '';
-    bodyEl.innerText = '';
-
+    titleEl.innerText = ''; viewsEl.innerText = ''; bodyEl.innerText = '';
     const prompt = `Return ONLY a valid JSON object. { "title": "...", "body": "...", "views": "..." } Make it a viral, dramatic TikTok story. Body 300+ words.`;
-
     try {
         const res = await fetch("/.netlify/functions/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ prompt })
         });
-
         const data = await res.json();
-
         if (!res.ok || data.error) {
             status.innerText = 'Error: ' + (data.error || 'Check Console');
-            genBtn.disabled = false;
-            return; 
+            genBtn.disabled = false; return; 
         }
-
         const contentText = data.content[0].text;
-        
-        // Safety check to extract JSON from the response text
         const jsonMatch = contentText.match(/\{[\s\S]*\}/);
         const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : contentText);
-
         titleEl.innerText = parsed.title;
         viewsEl.innerText = "👁 " + (parsed.views || "1.2M");
         bodyEl.innerText = parsed.body;
-
         status.innerText = 'Ready!';
     } catch (err) {
-        console.error(err);
-        status.innerText = 'Story generated but layout failed. Try again!';
+        status.innerText = 'Error loading story. Try again!';
     }
     genBtn.disabled = false;
 }
 </script>
-
 </body>
 </html>
