@@ -5,39 +5,40 @@ exports.handler = async (event) => {
     "Content-Type": "application/json"
   };
 
-  if (event.httpMethod === "OPTIONS") return { statusCode: 200, headers, body: "" };
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 200, headers, body: "" };
+  }
 
   try {
-    const { ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, SHOTSTACK_API_KEY } = process.env;
+    const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+    const SHOTSTACK_KEY = process.env.SHOTSTACK_API_KEY;
 
-    // 1. Claude Script Generation
+    if (!ANTHROPIC_KEY || !SHOTSTACK_KEY) {
+      throw new Error("Missing API Keys in Netlify settings");
+    }
+
+    // 1. Simple Story Request to Claude
     const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
+        "x-api-key": ANTHROPIC_KEY,
         "anthropic-version": "2023-06-01",
         "content-type": "application/json"
       },
       body: JSON.stringify({
         model: "claude-3-haiku-20240307",
-        max_tokens: 1000,
-        messages: [{ role: "user", content: "Return a JSON object with 'title' and 'script' for a short viral story." }]
+        max_tokens: 500,
+        messages: [{ role: "user", content: "Write a 50 word story. Return ONLY a JSON object with keys 'title' and 'script'." }]
       })
     });
 
     const claudeData = await claudeRes.json();
-    if (!claudeRes.ok) throw new Error(`Claude Error: ${claudeData.error?.message}`);
+    const story = JSON.parse(claudeData.content[0].text.match(/{[\s\S]*}/)[0]);
 
-    const storyText = claudeData.content[0].text;
-    const story = JSON.parse(storyText.match(/{[\s\S]*}/)[0]);
-
-    // 2. Shotstack Render
+    // 2. Simple Video Request to Shotstack
     const shotstackRes = await fetch("https://api.shotstack.io/v1/render", {
       method: "POST",
-      headers: { 
-        "x-api-key": SHOTSTACK_KEY, 
-        "content-type": "application/json" 
-      },
+      headers: { "x-api-key": SHOTSTACK_KEY, "content-type": "application/json" },
       body: JSON.stringify({
         timeline: {
           tracks: [{
@@ -52,14 +53,13 @@ exports.handler = async (event) => {
     });
 
     const shotstackData = await shotstackRes.json();
-    if (!shotstackRes.ok) throw new Error(`Shotstack Error: ${JSON.stringify(shotstackData)}`);
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({
-        renderId: shotstackData.response.id,
-        title: story.title
+      body: JSON.stringify({ 
+        renderId: shotstackData.response.id, 
+        title: story.title 
       })
     };
 
