@@ -1,4 +1,5 @@
-// No external imports needed if we use the built-in fetch properly
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+
 exports.handler = async (event) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
@@ -11,35 +12,31 @@ exports.handler = async (event) => {
   try {
     const { ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, SHOTSTACK_API_KEY } = process.env;
 
-    // 1. Claude Call (Simplified to avoid JSON parsing errors)
+    // 1. Claude Script Generation
     const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "x-api-key": ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
+        "content-type": "application/json"
       },
       body: JSON.stringify({
         model: "claude-3-haiku-20240307",
-        max_tokens: 1024,
-        messages: [{
-          role: "user", 
-          content: "Write a 100 word scary story. Return as a JSON object with keys 'title' and 'script'." 
-        }],
-      }),
+        max_tokens: 1000,
+        messages: [{ role: "user", content: "Return a JSON object with 'title' and 'script' for a 1 minute viral story." }]
+      })
     });
 
     const claudeData = await claudeRes.json();
-    if (!claudeRes.ok) throw new Error(`Claude: ${claudeData.error?.message}`);
-    
-    // Safety check for the JSON inside Claude's text response
-    const storyText = claudeData.content[0].text;
-    const story = JSON.parse(storyText.match(/{[\s\S]*}/)[0]);
+    const story = JSON.parse(claudeData.content[0].text.match(/{[\s\S]*}/)[0]);
 
-    // 2. Shotstack Call (Using 'v1' instead of 'stage' to be safer)
+    // 2. Shotstack Render
     const shotstackRes = await fetch("https://api.shotstack.io/v1/render", {
       method: "POST",
-      headers: { "x-api-key": SHOTSTACK_KEY, "content-type": "application/json" },
+      headers: { 
+        "x-api-key": SHOTSTACK_KEY, 
+        "content-type": "application/json" 
+      },
       body: JSON.stringify({
         timeline: {
           tracks: [{
@@ -50,11 +47,10 @@ exports.handler = async (event) => {
           }]
         },
         output: { format: "mp4", resolution: "sd" }
-      }),
+      })
     });
 
     const shotstackData = await shotstackRes.json();
-    if (!shotstackRes.ok) throw new Error(`Shotstack: ${JSON.stringify(shotstackData)}`);
 
     return {
       statusCode: 200,
@@ -62,15 +58,15 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         renderId: shotstackData.response.id,
         title: story.title
-      }),
+      })
     };
 
   } catch (err) {
-    // This will now show up in your browser console!
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: err.message }),
+      body: JSON.stringify({ error: err.message })
     };
   }
 };
+
