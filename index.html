@@ -96,13 +96,12 @@ async function generateScript() {
     const bodyEl = document.getElementById('body');
 
     genBtn.disabled = true;
-    status.innerText = 'Haiku is writing...';
+    status.innerText = 'Claude is writing...';
     titleEl.innerText = '';
     viewsEl.innerText = '';
     bodyEl.innerText = '';
 
-    // Strict prompt to ensure valid JSON
-    const prompt = `Return ONLY valid JSON. { "title": "...", "body": "...", "views": "..." } Make it a viral, dramatic TikTok reddit-style story. 300+ words. Do not include any text outside the JSON.`;
+    const prompt = `Return ONLY a valid JSON object. { "title": "...", "body": "...", "views": "..." } Make it a viral, dramatic TikTok story. Body 300+ words.`;
 
     try {
         const res = await fetch("/.netlify/functions/generate", {
@@ -120,16 +119,19 @@ async function generateScript() {
         }
 
         const contentText = data.content[0].text;
-        const parsed = JSON.parse(contentText);
+        
+        // Safety check to extract JSON from the response text
+        const jsonMatch = contentText.match(/\{[\s\S]*\}/);
+        const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : contentText);
 
         titleEl.innerText = parsed.title;
-        viewsEl.innerText = "👁 " + parsed.views;
+        viewsEl.innerText = "👁 " + (parsed.views || "1.2M");
         bodyEl.innerText = parsed.body;
 
-        status.innerText = 'Success!';
+        status.innerText = 'Ready!';
     } catch (err) {
         console.error(err);
-        status.innerText = 'Error parsing story. Try again!';
+        status.innerText = 'Story generated but layout failed. Try again!';
     }
     genBtn.disabled = false;
 }
