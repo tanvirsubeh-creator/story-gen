@@ -2,68 +2,442 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viral Story Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; background: #111; color: white; text-align: center; padding: 50px; }
-    .container { max-width: 500px; margin: auto; background: #222; padding: 20px; border-radius: 15px; }
-    button { padding: 10px 20px; cursor: pointer; background: #0062ff; color: white; border: none; border-radius: 5px; width: 100%; margin-top: 10px; }
-    #status { color: #aaa; margin-top: 10px; }
-    #exportBtn { background: #00c853; display: none; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --border: #2a2a3a;
+      --accent: #7c3aed;
+      --accent2: #06b6d4;
+      --text: #f0f0f8;
+      --muted: #6b6b8a;
+      --success: #10b981;
+      --error: #ef4444;
+    }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 20%, rgba(124,58,237,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(6,182,212,0.1) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,58,237,0.1);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text span {
+      color: var(--accent2);
+    }
+
+    h2 {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px 24px;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #9333ea);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(124,58,237,0.4);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent2);
+      border: 1px solid var(--accent2);
+      margin-top: 12px;
+      display: none;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(6,182,212,0.1);
+    }
+
+    /* Status area */
+    .status-area {
+      margin-top: 24px;
+      min-height: 80px;
+    }
+
+    .status-idle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .dot.active {
+      background: var(--accent2);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .dot.success { background: var(--success); }
+    .dot.error { background: var(--error); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    /* Progress steps */
+    .steps {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .steps.visible { display: flex; }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      transition: color 0.3s;
+    }
+
+    .step.active { color: var(--text); }
+    .step.done { color: var(--success); }
+    .step.failed { color: var(--error); }
+
+    .step-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    /* Story preview */
+    .story-preview {
+      display: none;
+      background: rgba(124,58,237,0.08);
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .story-preview.visible { display: block; }
+
+    .story-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent2);
+      font-family: 'DM Mono', monospace;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .story-text {
+      font-size: 13px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      line-height: 1.6;
+    }
+
+    /* Error box */
+    .error-box {
+      display: none;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-top: 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--error);
+      line-height: 1.5;
+    }
+
+    .error-box.visible { display: block; }
   </style>
 </head>
 <body>
+  <div class="container">
+    <div class="card">
+      <div class="logo">
+        <div class="logo-icon">🎬</div>
+        <div class="logo-text">Story<span>Gen</span></div>
+      </div>
 
-<div class="container">
-  <h1>🎭 Story Gen</h1>
-  <button id="genBtn" onclick="generateStory()">GENERATE VIDEO</button>
-  <p id="status">Ready</p>
-  <button id="exportBtn" onclick="downloadVideo()">⬇ DOWNLOAD VIDEO</button>
-</div>
+      <h2>Generate a viral short story video using AI — powered by Claude + Shotstack.</h2>
 
-<script>
-  let videoUrl = null;
+      <button class="btn btn-primary" id="genBtn" onclick="generateStory()">
+        ✦ GENERATE VIDEO
+      </button>
+      <button class="btn btn-secondary" id="exportBtn" onclick="downloadVideo()">
+        ↓ DOWNLOAD VIDEO
+      </button>
 
-  async function generateStory() {
-    const status = document.getElementById('status');
-    const genBtn = document.getElementById('genBtn');
-    genBtn.disabled = true;
-    status.innerText = "Generating story & video...";
+      <div class="status-area">
+        <div class="status-idle" id="statusIdle">
+          <div class="dot" id="statusDot"></div>
+          <span id="statusText">Ready</span>
+        </div>
 
-    try {
-      const res = await fetch('/functions/generate', { method: 'POST' });
-      const data = await res.json();
-      
-      if (data.renderId) {
-        pollStatus(data.renderId);
-      } else {
-        status.innerText = "Error starting render.";
+        <div class="steps" id="steps">
+          <div class="step" id="step1"><div class="step-dot"></div> Writing story with Claude...</div>
+          <div class="step" id="step2"><div class="step-dot"></div> Submitting to Shotstack...</div>
+          <div class="step" id="step3"><div class="step-dot"></div> Rendering video...</div>
+          <div class="step" id="step4"><div class="step-dot"></div> Done!</div>
+        </div>
+
+        <div class="story-preview" id="storyPreview">
+          <div class="story-title" id="previewTitle"></div>
+          <div class="story-text" id="previewScript"></div>
+        </div>
+
+        <div class="error-box" id="errorBox"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let videoUrl = null;
+
+    function setStep(stepId, state) {
+      const el = document.getElementById(stepId);
+      if (!el) return;
+      el.className = 'step ' + state;
+    }
+
+    function showError(msg) {
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      const errorBox = document.getElementById('errorBox');
+      dot.className = 'dot error';
+      text.textContent = 'Error';
+      errorBox.textContent = '⚠ ' + msg;
+      errorBox.classList.add('visible');
+      document.getElementById('genBtn').disabled = false;
+    }
+
+    async function generateStory() {
+      const genBtn = document.getElementById('genBtn');
+      const exportBtn = document.getElementById('exportBtn');
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+      const steps = document.getElementById('steps');
+      const errorBox = document.getElementById('errorBox');
+      const storyPreview = document.getElementById('storyPreview');
+
+      // Reset UI
+      genBtn.disabled = true;
+      exportBtn.style.display = 'none';
+      errorBox.classList.remove('visible');
+      storyPreview.classList.remove('visible');
+      steps.classList.add('visible');
+      statusDot.className = 'dot active';
+      videoUrl = null;
+
+      ['step1','step2','step3','step4'].forEach(s => setStep(s, ''));
+
+      // Step 1 - Generate
+      setStep('step1', 'active');
+      statusText.textContent = 'Writing story...';
+
+      try {
+        // Use /.netlify/functions/ path directly — avoids redirect issues
+        const res = await fetch('/.netlify/functions/generate', { method: 'POST' });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || `Server error ${res.status}`);
+        }
+
+        if (!data.renderId) {
+          throw new Error('No render ID returned from server');
+        }
+
+        setStep('step1', 'done');
+        setStep('step2', 'done');
+
+        // Show story preview if title returned
+        if (data.title) {
+          document.getElementById('previewTitle').textContent = data.title;
+          document.getElementById('previewScript').textContent = 'Video rendering...';
+          storyPreview.classList.add('visible');
+        }
+
+        // Step 3 - Poll
+        setStep('step3', 'active');
+        statusText.textContent = 'Rendering video...';
+        await pollStatus(data.renderId);
+
+      } catch (e) {
+        showError(e.message);
       }
-    } catch (e) { status.innerText = "Error: " + e.message; }
-  }
+    }
 
-  async function pollStatus(id) {
-    const interval = setInterval(async () => {
-      const res = await fetch(`/functions/poll?id=${id}`);
-      const data = await res.json();
-      
-      if (data.status === 'done') {
-        clearInterval(interval);
-        videoUrl = data.url;
-        document.getElementById('status').innerText = "✅ Done!";
-        document.getElementById('exportBtn').style.display = 'block';
-        document.getElementById('genBtn').disabled = false;
-      } else if (data.status === 'failed') {
-        clearInterval(interval);
-        document.getElementById('status').innerText = "❌ Render Failed.";
-      } else {
-        document.getElementById('status').innerText = "Cooking video... (" + data.status + ")";
+    async function pollStatus(id) {
+      const maxAttempts = 60; // 5 minutes max
+      let attempts = 0;
+
+      return new Promise((resolve, reject) => {
+        const interval = setInterval(async () => {
+          attempts++;
+
+          if (attempts > maxAttempts) {
+            clearInterval(interval);
+            reject(new Error('Render timed out after 5 minutes'));
+            showError('Render timed out after 5 minutes');
+            document.getElementById('genBtn').disabled = false;
+            return;
+          }
+
+          try {
+            // Use /.netlify/functions/ path directly
+            const res = await fetch(`/.netlify/functions/poll?id=${id}`);
+            const data = await res.json();
+
+            if (!res.ok) {
+              throw new Error(data.error || `Poll error ${res.status}`);
+            }
+
+            const statusText = document.getElementById('statusText');
+            statusText.textContent = `Rendering... (${data.status})`;
+
+            if (data.status === 'done') {
+              clearInterval(interval);
+              setStep('step3', 'done');
+              setStep('step4', 'done');
+
+              videoUrl = data.url;
+              document.getElementById('statusDot').className = 'dot success';
+              statusText.textContent = '✓ Done!';
+              document.getElementById('previewScript').textContent = 'Video ready to download!';
+              document.getElementById('exportBtn').style.display = 'block';
+              document.getElementById('genBtn').disabled = false;
+              resolve();
+
+            } else if (data.status === 'failed') {
+              clearInterval(interval);
+              reject(new Error('Shotstack render failed'));
+              showError('Shotstack render failed. Check your Shotstack account for details.');
+              document.getElementById('genBtn').disabled = false;
+            }
+            // otherwise keep polling (queued, fetching, rendering)
+
+          } catch (e) {
+            clearInterval(interval);
+            showError(e.message);
+            document.getElementById('genBtn').disabled = false;
+            reject(e);
+          }
+        }, 5000);
+      });
+    }
+
+    function downloadVideo() {
+      if (videoUrl) {
+        window.open(videoUrl, '_blank');
       }
-    }, 5000);
-  }
-
-  function downloadVideo() {
-    window.open(videoUrl, '_blank');
-  }
-</script>
+    }
+  </script>
 </body>
 </html>
