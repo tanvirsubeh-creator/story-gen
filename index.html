@@ -40,7 +40,7 @@ async function generateScript() {
     titleEl.innerText = ''; viewsEl.innerText = ''; bodyEl.innerText = '';
     const prompt = `Return ONLY a valid JSON object. { "title": "...", "body": "...", "views": "..." } Make it a viral, dramatic TikTok reddit-style story. 300+ words.`;
     try {
-        const res = await fetch("/.netlify/functions/generate", {
+        const res = await fetch("/netlify/functions/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ prompt })
