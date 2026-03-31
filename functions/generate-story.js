@@ -4,16 +4,12 @@ const headers = {
 “Access-Control-Allow-Headers”: “Content-Type”,
 “Content-Type”: “application/json”
 };
-
 if (event.httpMethod === “OPTIONS”) {
 return { statusCode: 200, headers, body: “” };
 }
-
 try {
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 if (!ANTHROPIC_KEY) throw new Error(“Missing ANTHROPIC_API_KEY”);
-
-```
 const genres = [
   { name: "horror",       bg: "https://videos.pexels.com/video-files/854173/854173-hd_1920_1080_25fps.mp4",   color: "#ff2222" },
   { name: "motivational", bg: "https://videos.pexels.com/video-files/1448735/1448735-hd_1920_1080_25fps.mp4", color: "#f5c842" },
@@ -26,7 +22,6 @@ const genres = [
 const genre = genres[Math.floor(Math.random() * genres.length)];
 console.log("Genre:", genre.name);
 
-console.log("Calling Claude...");
 const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
   method: "POST",
   headers: {
@@ -36,39 +31,21 @@ const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
   },
   body: JSON.stringify({
     model: "claude-haiku-4-5-20251001",
-    max_tokens: 800,
+    max_tokens: 400,
     messages: [{
       role: "user",
-      content: `Write a ${genre.name} short story designed to go viral on TikTok and YouTube Shorts.
-```
-
-Rules:
-
-- 80-100 words long (strictly)
-- Gripping hook in the first sentence
-- Surprising twist or emotional ending
-- Write in second person (“you”)
-- Short punchy sentences
-
-Return ONLY a valid JSON object with exactly:
-
-- “title”: catchy title, max 5 words, ALL CAPS
-- “script”: the full story (80-100 words)
-
-Raw JSON only. No markdown, no backticks.`
-}]
-})
+      content: "Write a " + genre.name + " short story for TikTok/YouTube Shorts.\nRules:\n- 80-100 words\n- Gripping hook first sentence\n- Surprising twist or emotional ending\n- Second person (you)\n- Short punchy sentences\nReturn ONLY valid JSON: {\"title\": \"MAX 5 WORDS ALL CAPS\", \"script\": \"the story\"}\nRaw JSON only. No markdown."
+    }]
+  })
 });
 
-```
 if (!claudeRes.ok) {
   const e = await claudeRes.text();
-  throw new Error(`Claude failed: ${claudeRes.status} - ${e}`);
+  throw new Error("Claude failed: " + claudeRes.status + " - " + e);
 }
 
 const claudeData = await claudeRes.json();
 const rawText = claudeData.content[0].text.trim();
-console.log("Claude:", rawText);
 
 let story;
 try {
@@ -92,8 +69,6 @@ return {
     genreBg: genre.bg
   })
 };
-```
-
 } catch (err) {
 console.error(“generate-story error:”, err.message);
 return {
@@ -102,4 +77,4 @@ headers,
 body: JSON.stringify({ error: err.message })
 };
 }
-};
+};​​​​​​​​​​​​​​​​
