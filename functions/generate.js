@@ -115,7 +115,7 @@ exports.handler = async (event) => {
 
     // Create signature using crypto (built into Node)
     const crypto = require("crypto");
-    const sigString = `folder=${folder}&resource_type=video&timestamp=${timestamp}${CLOUDINARY_SECRET}`;
+    const sigString = `folder=${folder}&timestamp=${timestamp}${CLOUDINARY_SECRET}`;
     const signature = crypto.createHash("sha256").update(sigString).digest("hex");
 
     // Build multipart form data for Cloudinary upload
