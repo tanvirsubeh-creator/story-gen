@@ -71,7 +71,7 @@ exports.handler = async (event) => {
     // ─────────────────────────────────────────
     // STEP 2: Generate voiceover with ElevenLabs
     // ─────────────────────────────────────────
-    const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || "21m00Tcm4TlvDq8ikWAM";
+    const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || "52dslcefh91ObWaL5fyQ";
 
     console.log("Calling ElevenLabs API...");
     const elevenRes = await fetch(
