@@ -2,7 +2,12 @@
   publish = "."
   functions = "functions"
 
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["node-fetch"]
+  timeout = 26  # This gives the AI time to think!
+
 [[redirects]]
   from = "/functions/*"
   to = "/.netlify/functions/:splat"
-  status = 200 
+  status = 200
