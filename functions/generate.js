@@ -9,7 +9,7 @@ exports.handler = async (event) => {
     if (!process.env.ANTHROPIC_API_KEY) {
       return {
         statusCode: 500,
-        body: JSON.stringify({ error: "API Key missing in Netlify settings!" })
+        body: JSON.stringify({ error: "API Key missing in Netlify settings." })
       };
     }
 
@@ -21,26 +21,29 @@ exports.handler = async (event) => {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: "claude-3-5-sonnet-20240620", // Switched to a more stable model
+        model: "claude-3-5-sonnet-20240620",
         max_tokens: 1000,
-        system: "You are a viral story writer. Return ONLY a valid JSON object with keys 'title', 'body', and 'views'.",
         messages: [
-          { role: "user", content: prompt }
+          { 
+            role: "user", 
+            content: `You are a viral story writer. ${prompt} 
+            Return ONLY a valid JSON object with the keys: "title", "body", and "views". 
+            Do not include any other text.` 
+          }
         ]
       })
     });
 
     const data = await response.json();
 
-    // Catch API-specific errors (like invalid keys or bad formatting)
     if (!response.ok) {
+      // This will now show the EXACT reason (e.g., "invalid_request_error")
       return {
         statusCode: response.status,
-        body: JSON.stringify({ error: `Anthropic says: ${data.error?.message || "Invalid Request"}` })
+        body: JSON.stringify({ error: `Anthropic Error: ${data.error?.type || 'Unknown'} - ${data.error?.message || ''}` })
       };
     }
 
-    // Extract the text from the response
     const content = data.content[0].text;
 
     return {
