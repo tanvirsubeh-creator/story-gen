@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -8,239 +9,242 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --bg: #0a0a0f;
-      --surface: #13131a;
-      --border: #2a2a3a;
-      --accent: #7c3aed;
-      --accent2: #06b6d4;
-      --text: #f0f0f8;
-      --muted: #6b6b8a;
-      --success: #10b981;
-      --error: #ef4444;
-    }
+```
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --border: #2a2a3a;
+  --accent: #7c3aed;
+  --accent2: #06b6d4;
+  --text: #f0f0f8;
+  --muted: #6b6b8a;
+  --success: #10b981;
+  --error: #ef4444;
+}
 
-    body {
-      font-family: 'Syne', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
 
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 80% 50% at 20% 20%, rgba(124,58,237,0.15) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(6,182,212,0.1) 0%, transparent 60%);
-      pointer-events: none;
-      z-index: 0;
-    }
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(124,58,237,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(6,182,212,0.1) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
 
-    .container {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      max-width: 500px;
-    }
+.container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 500px;
+}
 
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 40px;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,58,237,0.1);
-    }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,58,237,0.1);
+}
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 8px;
-    }
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
 
-    .logo-icon {
-      width: 42px;
-      height: 42px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-    }
+.logo-icon {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
 
-    .logo-text { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
-    .logo-text span { color: var(--accent2); }
+.logo-text { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+.logo-text span { color: var(--accent2); }
 
-    .tagline {
-      font-size: 13px;
-      color: var(--muted);
-      font-family: 'DM Mono', monospace;
-      margin-bottom: 28px;
-      line-height: 1.6;
-    }
+.tagline {
+  font-size: 13px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
 
-    .genre-badge {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 20px;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+.genre-badge {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
 
-    .genre-badge.visible { display: flex; }
+.genre-badge.visible { display: flex; }
 
-    .genre-pill {
-      background: rgba(124,58,237,0.2);
-      border: 1px solid rgba(124,58,237,0.3);
-      border-radius: 20px;
-      padding: 3px 10px;
-      color: var(--accent2);
-      font-weight: 700;
-    }
+.genre-pill {
+  background: rgba(124,58,237,0.2);
+  border: 1px solid rgba(124,58,237,0.3);
+  border-radius: 20px;
+  padding: 3px 10px;
+  color: var(--accent2);
+  font-weight: 700;
+}
 
-    .btn {
-      width: 100%;
-      padding: 16px 24px;
-      border: none;
-      border-radius: 12px;
-      font-family: 'Syne', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+.btn {
+  width: 100%;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
 
-    .btn-primary {
-      background: linear-gradient(135deg, var(--accent), #9333ea);
-      color: white;
-    }
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), #9333ea);
+  color: white;
+}
 
-    .btn-primary:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 25px rgba(124,58,237,0.4);
-    }
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(124,58,237,0.4);
+}
 
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .btn-secondary {
-      background: transparent;
-      color: var(--accent2);
-      border: 1px solid var(--accent2);
-      margin-top: 12px;
-      display: none;
-    }
+.btn-secondary {
+  background: transparent;
+  color: var(--accent2);
+  border: 1px solid var(--accent2);
+  margin-top: 12px;
+  display: none;
+}
 
-    .btn-secondary:hover { background: rgba(6,182,212,0.1); }
+.btn-secondary:hover { background: rgba(6,182,212,0.1); }
 
-    .status-area { margin-top: 24px; }
+.status-area { margin-top: 24px; }
 
-    .status-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--muted);
-      font-family: 'DM Mono', monospace;
-      font-size: 13px;
-      margin-bottom: 16px;
-    }
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
 
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--muted);
-      flex-shrink: 0;
-    }
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+}
 
-    .dot.active { background: var(--accent2); animation: pulse 1.5s ease-in-out infinite; }
-    .dot.success { background: var(--success); }
-    .dot.error { background: var(--error); }
+.dot.active { background: var(--accent2); animation: pulse 1.5s ease-in-out infinite; }
+.dot.success { background: var(--success); }
+.dot.error { background: var(--error); }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.8); }
-    }
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
 
-    .steps { display: none; flex-direction: column; gap: 4px; margin-bottom: 16px; }
-    .steps.visible { display: flex; }
+.steps { display: none; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+.steps.visible { display: flex; }
 
-    .step {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-family: 'DM Mono', monospace;
-      font-size: 12px;
-      color: var(--muted);
-      transition: color 0.3s;
-      padding: 5px 0;
-    }
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  transition: color 0.3s;
+  padding: 5px 0;
+}
 
-    .step.active { color: var(--text); }
-    .step.done { color: var(--success); }
-    .step.failed { color: var(--error); }
-    .step-icon { font-size: 14px; width: 20px; text-align: center; }
+.step.active { color: var(--text); }
+.step.done { color: var(--success); }
+.step.failed { color: var(--error); }
+.step-icon { font-size: 14px; width: 20px; text-align: center; }
 
-    .story-preview {
-      display: none;
-      background: rgba(124,58,237,0.06);
-      border: 1px solid rgba(124,58,237,0.15);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
+.story-preview {
+  display: none;
+  background: rgba(124,58,237,0.06);
+  border: 1px solid rgba(124,58,237,0.15);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
 
-    .story-preview.visible { display: block; }
+.story-preview.visible { display: block; }
 
-    .story-preview-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--accent2);
-      font-family: 'DM Mono', monospace;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 6px;
-    }
+.story-preview-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent2);
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
 
-    .story-preview-heading {
-      font-size: 16px;
-      font-weight: 800;
-      color: var(--text);
-      margin-bottom: 8px;
-    }
+.story-preview-heading {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 8px;
+}
 
-    .story-preview-script {
-      font-size: 12px;
-      color: var(--muted);
-      font-family: 'DM Mono', monospace;
-      line-height: 1.7;
-    }
+.story-preview-script {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  line-height: 1.7;
+}
 
-    .error-box {
-      display: none;
-      background: rgba(239,68,68,0.08);
-      border: 1px solid rgba(239,68,68,0.2);
-      border-radius: 12px;
-      padding: 14px 16px;
-      font-family: 'DM Mono', monospace;
-      font-size: 12px;
-      color: var(--error);
-      line-height: 1.5;
-      word-break: break-word;
-    }
+.error-box {
+  display: none;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--error);
+  line-height: 1.5;
+  word-break: break-word;
+}
 
-    .error-box.visible { display: block; }
+.error-box.visible { display: block; }
+```
+
   </style>
 </head>
 <body>
@@ -252,41 +256,44 @@
       </div>
       <p class="tagline">AI-generated viral short story videos.<br>New genre. New story. Every time.</p>
 
-      <div class="genre-badge" id="genreBadge">
-        Genre: <span class="genre-pill" id="genreLabel">—</span>
-      </div>
+```
+  <div class="genre-badge" id="genreBadge">
+    Genre: <span class="genre-pill" id="genreLabel">—</span>
+  </div>
 
-      <button class="btn btn-primary" id="genBtn" onclick="generateStory()">
-        ✦ GENERATE VIDEO
-      </button>
-      <button class="btn btn-secondary" id="exportBtn" onclick="downloadVideo()">
-        ↓ DOWNLOAD VIDEO
-      </button>
+  <button class="btn btn-primary" id="genBtn" onclick="generateStory()">
+    ✦ GENERATE VIDEO
+  </button>
+  <button class="btn btn-secondary" id="exportBtn" onclick="downloadVideo()">
+    ↓ DOWNLOAD VIDEO
+  </button>
 
-      <div class="status-area">
-        <div class="status-row">
-          <div class="dot" id="statusDot"></div>
-          <span id="statusText">Ready</span>
-        </div>
-
-        <div class="steps" id="steps">
-          <div class="step" id="step1"><span class="step-icon">✍️</span>Writing story with Claude...</div>
-          <div class="step" id="step2"><span class="step-icon">🎙️</span>Generating voiceover...</div>
-          <div class="step" id="step3"><span class="step-icon">☁️</span>Uploading audio...</div>
-          <div class="step" id="step4"><span class="step-icon">🎬</span>Submitting to Shotstack...</div>
-          <div class="step" id="step5"><span class="step-icon">⏳</span>Rendering video...</div>
-          <div class="step" id="step6"><span class="step-icon">✅</span>Done!</div>
-        </div>
-
-        <div class="story-preview" id="storyPreview">
-          <div class="story-preview-label">Generated Story</div>
-          <div class="story-preview-heading" id="previewTitle"></div>
-          <div class="story-preview-script" id="previewScript"></div>
-        </div>
-
-        <div class="error-box" id="errorBox"></div>
-      </div>
+  <div class="status-area">
+    <div class="status-row">
+      <div class="dot" id="statusDot"></div>
+      <span id="statusText">Ready</span>
     </div>
+
+    <div class="steps" id="steps">
+      <div class="step" id="step1"><span class="step-icon">✍️</span>Writing story with Claude...</div>
+      <div class="step" id="step2"><span class="step-icon">🎙️</span>Generating voiceover...</div>
+      <div class="step" id="step3"><span class="step-icon">☁️</span>Uploading audio...</div>
+      <div class="step" id="step4"><span class="step-icon">🎬</span>Submitting to Shotstack...</div>
+      <div class="step" id="step5"><span class="step-icon">⏳</span>Rendering video...</div>
+      <div class="step" id="step6"><span class="step-icon">✅</span>Done!</div>
+    </div>
+
+    <div class="story-preview" id="storyPreview">
+      <div class="story-preview-label">Generated Story</div>
+      <div class="story-preview-heading" id="previewTitle"></div>
+      <div class="story-preview-script" id="previewScript"></div>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+  </div>
+</div>
+```
+
   </div>
 
   <script>
@@ -326,30 +333,43 @@
 
       try {
 
-        // ── CALL 1: generate (Claude + ElevenLabs + Cloudinary) ──
+        // ── CALL 1: generate-story (Claude only) ──
         setStep('step1', 'active');
         statusText.textContent = 'Writing story...';
 
-        const genRes = await fetch('/.netlify/functions/generate', { method: 'POST' });
-        const genData = await genRes.json();
-        if (!genRes.ok) throw new Error(genData.error || `Generate error ${genRes.status}`);
+        const storyRes = await fetch('/.netlify/functions/generate-story', { method: 'POST' });
+        const storyData = await storyRes.json();
+        if (!storyRes.ok) throw new Error(storyData.error || `Story error ${storyRes.status}`);
 
         setStep('step1', 'done');
-        setStep('step2', 'done');
-        setStep('step3', 'done');
 
         // Show story preview
-        document.getElementById('previewTitle').textContent = genData.title;
-        document.getElementById('previewScript').textContent = genData.script;
+        document.getElementById('previewTitle').textContent = storyData.title;
+        document.getElementById('previewScript').textContent = storyData.script;
         document.getElementById('storyPreview').classList.add('visible');
 
         // Show genre badge
-        if (genData.genre) {
-          document.getElementById('genreLabel').textContent = genData.genre.toUpperCase();
+        if (storyData.genre) {
+          document.getElementById('genreLabel').textContent = storyData.genre.toUpperCase();
           document.getElementById('genreBadge').classList.add('visible');
         }
 
-        // ── CALL 2: render (Shotstack submit) ──
+        // ── CALL 2: generate-audio (ElevenLabs + Cloudinary) ──
+        setStep('step2', 'active');
+        statusText.textContent = 'Generating voiceover...';
+
+        const audioRes = await fetch('/.netlify/functions/generate-audio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ script: storyData.script })
+        });
+        const audioData = await audioRes.json();
+        if (!audioRes.ok) throw new Error(audioData.error || `Audio error ${audioRes.status}`);
+
+        setStep('step2', 'done');
+        setStep('step3', 'done');
+
+        // ── CALL 3: render (Shotstack submit) ──
         setStep('step4', 'active');
         statusText.textContent = 'Submitting to Shotstack...';
 
@@ -357,11 +377,11 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            audioUrl:   genData.audioUrl,
-            title:      genData.title,
-            script:     genData.script,
-            genreColor: genData.genreColor,
-            genreBg:    genData.genreBg
+            audioUrl:   audioData.audioUrl,
+            title:      storyData.title,
+            script:     storyData.script,
+            genreColor: storyData.genreColor,
+            genreBg:    storyData.genreBg
           })
         });
 
@@ -373,7 +393,7 @@
         setStep('step5', 'active');
         statusText.textContent = 'Rendering video...';
 
-        // ── CALL 3: poll until done ──
+        // ── CALL 4: poll until done ──
         await pollStatus(renderData.renderId);
 
       } catch (e) {
@@ -435,5 +455,6 @@
       if (videoUrl) window.open(videoUrl, '_blank');
     }
   </script>
+
 </body>
 </html>
