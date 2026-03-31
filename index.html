@@ -337,8 +337,11 @@ body::before {
         setStep('step1', 'active');
         statusText.textContent = 'Writing story...';
 
-        const storyRes = await fetch('/.netlify/functions/generate-story', { method: 'POST' });
-        const storyData = await storyRes.json();
+        const storyRes  = await fetch('/.netlify/functions/generate-story', { method: 'POST' });
+        const storyText = await storyRes.text();
+        let storyData;
+        try { storyData = JSON.parse(storyText); }
+        catch(e) { throw new Error(`Story parse failed (HTTP ${storyRes.status}): ${storyText.slice(0,300)}`); }
         if (!storyRes.ok) throw new Error(storyData.error || `Story error ${storyRes.status}`);
 
         setStep('step1', 'done');
@@ -358,12 +361,15 @@ body::before {
         setStep('step2', 'active');
         statusText.textContent = 'Generating voiceover...';
 
-        const audioRes = await fetch('/.netlify/functions/generate-audio', {
+        const audioRes  = await fetch('/.netlify/functions/generate-audio', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ script: storyData.script })
         });
-        const audioData = await audioRes.json();
+        const audioText = await audioRes.text();
+        let audioData;
+        try { audioData = JSON.parse(audioText); }
+        catch(e) { throw new Error(`Audio parse failed (HTTP ${audioRes.status}): ${audioText.slice(0,300)}`); }
         if (!audioRes.ok) throw new Error(audioData.error || `Audio error ${audioRes.status}`);
 
         setStep('step2', 'done');
@@ -373,7 +379,7 @@ body::before {
         setStep('step4', 'active');
         statusText.textContent = 'Submitting to Shotstack...';
 
-        const renderRes = await fetch('/.netlify/functions/render', {
+        const renderRes  = await fetch('/.netlify/functions/render', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -384,8 +390,10 @@ body::before {
             genreBg:    storyData.genreBg
           })
         });
-
-        const renderData = await renderRes.json();
+        const renderText = await renderRes.text();
+        let renderData;
+        try { renderData = JSON.parse(renderText); }
+        catch(e) { throw new Error(`Render parse failed (HTTP ${renderRes.status}): ${renderText.slice(0,300)}`); }
         if (!renderRes.ok) throw new Error(renderData.error || `Render error ${renderRes.status}`);
         if (!renderData.renderId) throw new Error('No render ID returned');
 
@@ -417,8 +425,11 @@ body::before {
           }
 
           try {
-            const res  = await fetch(`/.netlify/functions/poll?id=${id}`);
-            const data = await res.json();
+            const res      = await fetch(`/.netlify/functions/poll?id=${id}`);
+            const pollText = await res.text();
+            let data;
+            try { data = JSON.parse(pollText); }
+            catch(e) { throw new Error(`Poll parse failed (HTTP ${res.status}): ${pollText.slice(0,300)}`); }
             if (!res.ok) throw new Error(data.error || `Poll error ${res.status}`);
 
             document.getElementById('statusText').textContent = `Rendering... (${data.status})`;
