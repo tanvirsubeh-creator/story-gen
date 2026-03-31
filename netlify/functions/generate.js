@@ -1,5 +1,6 @@
+const fetch = require('node-fetch');
+
 exports.handler = async (event) => {
-    // 1. Only allow POST requests
     if (event.httpMethod !== "POST") {
         return { statusCode: 405, body: JSON.stringify({ error: "Method Not Allowed" }) };
     }
@@ -7,7 +8,6 @@ exports.handler = async (event) => {
     try {
         const { prompt } = JSON.parse(event.body);
 
-        // 2. Check for the API Key
         if (!process.env.ANTHROPIC_API_KEY) {
             return {
                 statusCode: 500,
@@ -15,7 +15,6 @@ exports.handler = async (event) => {
             };
         }
 
-        // 3. Call Anthropic API with the correct "user" role structure
         const response = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
@@ -34,15 +33,13 @@ exports.handler = async (event) => {
 
         const data = await response.json();
 
-        // 4. Handle API Errors
         if (!response.ok) {
             return {
                 statusCode: response.status,
-                body: JSON.stringify({ error: data.error?.message || "Anthropic API Error" })
+                body: JSON.stringify({ error: data.error?.message || "API Error" })
             };
         }
 
-        // 5. Success
         return {
             statusCode: 200,
             body: JSON.stringify(data)
