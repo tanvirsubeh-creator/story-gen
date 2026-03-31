@@ -72,7 +72,7 @@ exports.handler = async (event) => {
     // STEP 2: Generate voiceover with ElevenLabs
     // ─────────────────────────────────────────
     // "Rachel" voice - change VOICE_ID to any voice from your ElevenLabs account
-    const VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
+    const VOICE_ID = "sB7vwSCyX0tQmU24cW2C";
 
     console.log("Calling ElevenLabs API...");
     const elevenRes = await fetch(
