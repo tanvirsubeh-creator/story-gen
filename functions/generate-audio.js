@@ -32,7 +32,7 @@ exports.handler = async (event) => {
     const script = body.script;
     if (!script) throw new Error("Missing field: script");
 
-    const elevenRes = await fetch("https://api.elevenlabs.io/v1/text-to-speech/" + VOICE_ID, {
+    const elevenRes = await fetch("https://api.elevenlabs.io/v1/text-to-speech/" + 52dslcefh91ObWaL5fyQ, {
       method: "POST",
       headers: {
         "xi-api-key": ELEVENLABS_KEY,
