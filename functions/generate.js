@@ -10,14 +10,17 @@ exports.handler = async (event) => {
   }
 
   try {
-    const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-    const SHOTSTACK_KEY = process.env.SHOTSTACK_API_KEY;
-    const ELEVENLABS_KEY = process.env.ELEVENLABS_API_KEY;
+    const ANTHROPIC_KEY     = process.env.ANTHROPIC_API_KEY;
+    const SHOTSTACK_KEY     = process.env.SHOTSTACK_API_KEY;
+    const ELEVENLABS_KEY    = process.env.ELEVENLABS_API_KEY;
+    const CLOUDINARY_NAME   = process.env.CLOUDINARY_CLOUD_NAME;
+    const CLOUDINARY_KEY    = process.env.CLOUDINARY_API_KEY;
+    const CLOUDINARY_SECRET = process.env.CLOUDINARY_API_SECRET;
 
-    console.log("Keys present:", !!ANTHROPIC_KEY, !!SHOTSTACK_KEY, !!ELEVENLABS_KEY);
+    console.log("Keys present:", !!ANTHROPIC_KEY, !!SHOTSTACK_KEY, !!ELEVENLABS_KEY, !!CLOUDINARY_NAME);
 
-    if (!ANTHROPIC_KEY || !SHOTSTACK_KEY || !ELEVENLABS_KEY) {
-      throw new Error("Missing API keys. Need: ANTHROPIC_API_KEY, SHOTSTACK_API_KEY, ELEVENLABS_API_KEY");
+    if (!ANTHROPIC_KEY || !SHOTSTACK_KEY || !ELEVENLABS_KEY || !CLOUDINARY_NAME || !CLOUDINARY_KEY || !CLOUDINARY_SECRET) {
+      throw new Error("Missing API keys. Check: ANTHROPIC_API_KEY, SHOTSTACK_API_KEY, ELEVENLABS_API_KEY, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET");
     }
 
     // ─────────────────────────────────────────
@@ -48,8 +51,6 @@ exports.handler = async (event) => {
     }
 
     const claudeData = await claudeRes.json();
-    console.log("Claude raw response:", JSON.stringify(claudeData));
-
     const rawText = claudeData.content[0].text.trim();
     console.log("Claude text:", rawText);
 
@@ -58,7 +59,6 @@ exports.handler = async (event) => {
       const cleaned = rawText.replace(/```json|```/g, "").trim();
       story = JSON.parse(cleaned);
     } catch (parseErr) {
-      console.error("JSON parse error:", parseErr.message, "Raw:", rawText);
       throw new Error("Claude returned invalid JSON: " + rawText);
     }
 
@@ -71,8 +71,7 @@ exports.handler = async (event) => {
     // ─────────────────────────────────────────
     // STEP 2: Generate voiceover with ElevenLabs
     // ─────────────────────────────────────────
-    // "Rachel" voice - change VOICE_ID to any voice from your ElevenLabs account
-    const VOICE_ID = "52dslcefh91ObWaL5fyQ";
+    const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || "21m00Tcm4TlvDq8ikWAM";
 
     console.log("Calling ElevenLabs API...");
     const elevenRes = await fetch(
@@ -101,16 +100,74 @@ exports.handler = async (event) => {
       throw new Error(`ElevenLabs API failed: ${elevenRes.status} - ${errText}`);
     }
 
-    // Convert audio to base64 for Shotstack
     const audioBuffer = await elevenRes.arrayBuffer();
     const audioBase64 = Buffer.from(audioBuffer).toString("base64");
-    const audioDataUrl = `data:audio/mpeg;base64,${audioBase64}`;
-
     console.log("ElevenLabs audio generated, size:", audioBuffer.byteLength, "bytes");
 
     // ─────────────────────────────────────────
-    // STEP 3: Render video with Shotstack
-    // Title shows for 3s, script for 7s, voiceover plays throughout
+    // STEP 3: Upload audio to Cloudinary
+    // ─────────────────────────────────────────
+    console.log("Uploading audio to Cloudinary...");
+
+    // Build Cloudinary signature
+    const timestamp = Math.floor(Date.now() / 1000);
+    const folder = "storygen";
+
+    // Create signature using crypto (built into Node)
+    const crypto = require("crypto");
+    const sigString = `folder=${folder}&resource_type=video&timestamp=${timestamp}${CLOUDINARY_SECRET}`;
+    const signature = crypto.createHash("sha256").update(sigString).digest("hex");
+
+    // Build multipart form data for Cloudinary upload
+    const boundary = "----FormBoundary" + Math.random().toString(36).slice(2);
+    const CRLF = "\r\n";
+
+    const buildPart = (name, value) =>
+      `--${boundary}${CRLF}Content-Disposition: form-data; name="${name}"${CRLF}${CRLF}${value}${CRLF}`;
+
+    let formBody = "";
+    formBody += buildPart("api_key", CLOUDINARY_KEY);
+    formBody += buildPart("timestamp", timestamp.toString());
+    formBody += buildPart("signature", signature);
+    formBody += buildPart("folder", folder);
+    formBody += buildPart("resource_type", "video"); // Cloudinary uses "video" for audio files
+
+    // Add the audio file part
+    const fileHeader = `--${boundary}${CRLF}Content-Disposition: form-data; name="file"; filename="voiceover.mp3"${CRLF}Content-Type: audio/mpeg${CRLF}${CRLF}`;
+    const fileFooter = `${CRLF}--${boundary}--${CRLF}`;
+
+    // Combine all parts as a Buffer
+    const formPrefix = Buffer.from(formBody, "utf8");
+    const fileHeaderBuf = Buffer.from(fileHeader, "utf8");
+    const audioData = Buffer.from(audioBuffer);
+    const fileFooterBuf = Buffer.from(fileFooter, "utf8");
+
+    const fullBody = Buffer.concat([formPrefix, fileHeaderBuf, audioData, fileFooterBuf]);
+
+    const cloudinaryRes = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_NAME}/video/upload`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": `multipart/form-data; boundary=${boundary}`,
+          "Content-Length": fullBody.length.toString()
+        },
+        body: fullBody
+      }
+    );
+
+    if (!cloudinaryRes.ok) {
+      const errText = await cloudinaryRes.text();
+      console.error("Cloudinary error:", errText);
+      throw new Error(`Cloudinary upload failed: ${cloudinaryRes.status} - ${errText}`);
+    }
+
+    const cloudinaryData = await cloudinaryRes.json();
+    const audioUrl = cloudinaryData.secure_url;
+    console.log("Audio uploaded to Cloudinary:", audioUrl);
+
+    // ─────────────────────────────────────────
+    // STEP 4: Render video with Shotstack
     // ─────────────────────────────────────────
     console.log("Calling Shotstack API...");
     const shotstackRes = await fetch("https://api.shotstack.io/stage/render", {
@@ -123,7 +180,7 @@ exports.handler = async (event) => {
         timeline: {
           background: "#000000",
           soundtrack: {
-            src: audioDataUrl,
+            src: audioUrl,
             effect: "fadeOut"
           },
           tracks: [
