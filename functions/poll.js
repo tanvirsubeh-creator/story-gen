@@ -22,7 +22,7 @@ exports.handler = async (event) => {
 
     console.log("Polling render ID:", renderId);
 
-    const res = await fetch(`https://api.shotstack.io/v1/render/${renderId}`, {
+    const res = await fetch(`https://api.shotstack.io/stage/render/${renderId}`, {
       headers: { "x-api-key": SHOTSTACK_KEY }
     });
 
