@@ -1,5 +1,3 @@
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-
 exports.handler = async (event) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
@@ -23,12 +21,15 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         model: "claude-3-haiku-20240307",
         max_tokens: 1000,
-        messages: [{ role: "user", content: "Return a JSON object with 'title' and 'script' for a 1 minute viral story." }]
+        messages: [{ role: "user", content: "Return a JSON object with 'title' and 'script' for a short viral story." }]
       })
     });
 
     const claudeData = await claudeRes.json();
-    const story = JSON.parse(claudeData.content[0].text.match(/{[\s\S]*}/)[0]);
+    if (!claudeRes.ok) throw new Error(`Claude Error: ${claudeData.error?.message}`);
+
+    const storyText = claudeData.content[0].text;
+    const story = JSON.parse(storyText.match(/{[\s\S]*}/)[0]);
 
     // 2. Shotstack Render
     const shotstackRes = await fetch("https://api.shotstack.io/v1/render", {
@@ -51,6 +52,7 @@ exports.handler = async (event) => {
     });
 
     const shotstackData = await shotstackRes.json();
+    if (!shotstackRes.ok) throw new Error(`Shotstack Error: ${JSON.stringify(shotstackData)}`);
 
     return {
       statusCode: 200,
@@ -69,4 +71,3 @@ exports.handler = async (event) => {
     };
   }
 };
-
