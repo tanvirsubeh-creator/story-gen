@@ -1,17 +1,19 @@
 exports.handler = async (event) => {
-  // 1. Only allow POST requests from your frontend
   if (event.httpMethod !== "POST") {
-    return { 
-      statusCode: 405, 
-      body: JSON.stringify({ error: "Method Not Allowed" }) 
-    };
+    return { statusCode: 405, body: "Method Not Allowed" };
   }
 
   try {
     const { prompt } = JSON.parse(event.body);
 
-    // 2. Call the AI API (Anthropic Claude)
-    // IMPORTANT: Go to Netlify Settings -> Env Variables and add ANTHROPIC_API_KEY
+    // 1. Check if the API key exists at all
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: "Missing ANTHROPIC_API_KEY in Netlify settings." })
+      };
+    }
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -21,36 +23,35 @@ exports.handler = async (event) => {
       },
       body: JSON.stringify({
         model: "claude-3-haiku-20240307",
-        max_tokens: 1200,
+        max_tokens: 1000,
         messages: [{ role: "user", content: prompt }],
-        system: "You are a viral story writer. Return ONLY a valid JSON object with the keys: 'title', 'body', and 'views'. Do not include any conversational text."
+        system: "Return ONLY a valid JSON object: { \"title\": \"...\", \"body\": \"...\", \"views\": \"...\" }"
       })
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || "AI API Error");
+    const data = await response.json();
+
+    // 2. If Anthropic sends an error (like 'invalid api key' or 'over quota')
+    if (data.error) {
+      return {
+        statusCode: response.status,
+        body: JSON.stringify({ error: `Anthropic Error: ${data.error.message}` })
+      };
     }
 
-    const data = await response.json();
-    
-    // 3. Format the response to match your index.html expectations
-    // Your frontend uses: data.content[0].text
+    const content = data.content[0].text;
+
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        content: [
-          { text: data.content[0].text }
-        ]
+        content: [{ text: content }]
       }),
     };
-
   } catch (error) {
-    console.error("Function Error:", error.message);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
+      body: JSON.stringify({ error: `Connection Error: ${error.message}` }),
     };
   }
 };
