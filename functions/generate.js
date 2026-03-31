@@ -113,7 +113,7 @@ exports.handler = async (event) => {
     // Title shows for 3s, script for 7s, voiceover plays throughout
     // ─────────────────────────────────────────
     console.log("Calling Shotstack API...");
-    const shotstackRes = await fetch("https://api.shotstack.io/v1/render", {
+    const shotstackRes = await fetch("https://api.shotstack.io/stage/render", {
       method: "POST",
       headers: {
         "x-api-key": SHOTSTACK_KEY,
