@@ -30,7 +30,7 @@ const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
     messages: [
       {
         role: "user",
-        content: `You are a viral TikTok story writer. Write a dramatic, emotional, first-person story that is exactly 2 minutes when read aloud (about 280-300 words). 
+        content: `You are a viral TikTok story writer. Write a dramatic, emotional, first-person story that is exactly 2 minutes when read aloud (about 280-300 words).
 ```
 
 It should be gripping from the first sentence.
@@ -40,7 +40,7 @@ Return ONLY a valid JSON object with these keys:
 - “script”: the full 2-minute narration script
 - “captions”: array of 8 caption strings, each 1-2 sentences, evenly spaced across the story
 - “views”: a fake viral view count like “2.4M”
-  Do not include any other text.`,
+  Do not include any other text or markdown.`,
   },
   ],
   }),
@@ -86,24 +86,10 @@ Return ONLY a valid JSON object with these keys:
   
   const audioBuffer = await elevenRes.arrayBuffer();
   const audioBase64 = Buffer.from(audioBuffer).toString(“base64”);
-  const audioDataUrl = `data:audio/mpeg;base64,${audioBase64}`;
   
-  // ── 3. Upload audio to Shotstack ingest ──────────────────────────────────
-  const ingestRes = await fetch(“https://api.shotstack.io/ingest/stage/sources”, {
-  method: “POST”,
-  headers: {
-  “x-api-key”: SHOTSTACK_KEY,
-  “content-type”: “application/json”,
-  },
-  body: JSON.stringify({ url: audioDataUrl }),
-  });
-  
-  const ingestData = await ingestRes.json();
-  const audioUrl = ingestData?.data?.attributes?.url || null;
-  
-  // ── 4. Build Shotstack video timeline ────────────────────────────────────
+  // ── 3. Build Shotstack video ─────────────────────────────────────────────
   const MINECRAFT_VIDEO =
-  “https://cdn.coverr.co/videos/coverr-minecraft-like-game-7619/1080p.mp4”;
+  “https://cdn.coverr.co/videos/coverr-a-player-running-on-a-minecraft-map-8792/1080p.mp4”;
   
   const captionClips = (story.captions || []).map((text, i) => ({
   asset: {
@@ -112,32 +98,13 @@ Return ONLY a valid JSON object with these keys:
   style: “subtitle”,
   color: “#ffffff”,
   size: “medium”,
-  background: “rgba(0,0,0,0.55)”,
+  background: “rgba(0,0,0,0.6)”,
   position: “bottom”,
   },
   start: i * 15,
   length: 14,
   transition: { in: “fade”, out: “fade” },
   }));
-  
-  const timeline = {
-  soundtrack: audioUrl
-  ? { src: audioUrl, effect: “fadeOut” }
-  : undefined,
-  tracks: [
-  { clips: captionClips },
-  {
-  clips: [
-  {
-  asset: { type: “video”, src: MINECRAFT_VIDEO, volume: 0.1 },
-  start: 0,
-  length: 120,
-  fit: “cover”,
-  },
-  ],
-  },
-  ],
-  };
   
   const shotstackRes = await fetch(“https://api.shotstack.io/stage/render”, {
   method: “POST”,
@@ -146,7 +113,25 @@ Return ONLY a valid JSON object with these keys:
   “content-type”: “application/json”,
   },
   body: JSON.stringify({
-  timeline,
+  timeline: {
+  tracks: [
+  { clips: captionClips },
+  {
+  clips: [
+  {
+  asset: {
+  type: “video”,
+  src: MINECRAFT_VIDEO,
+  volume: 0.15,
+  },
+  start: 0,
+  length: 120,
+  fit: “cover”,
+  },
+  ],
+  },
+  ],
+  },
   output: { format: “mp4”, resolution: “hd”, fps: 30 },
   }),
   });
@@ -170,6 +155,7 @@ Return ONLY a valid JSON object with these keys:
   title: story.title,
   views: story.views,
   script: story.script,
+  audioBase64,
   renderId,
   }),
   };
