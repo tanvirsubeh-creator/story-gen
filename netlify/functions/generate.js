@@ -1,6 +1,9 @@
 exports.handler = async (event) => {
     if (event.httpMethod !== "POST") {
-        return { statusCode: 405, body: JSON.stringify({ error: "Method Not Allowed" }) };
+        return { 
+            statusCode: 405, 
+            body: JSON.stringify({ error: "Method Not Allowed" }) 
+        };
     }
 
     try {
@@ -21,9 +24,11 @@ exports.handler = async (event) => {
                 "anthropic-version": "2023-06-01"
             },
             body: JSON.stringify({
-                model: "claude-3-5-sonnet-20240620",
+                model: "claude-3-haiku-20240307", // Swapped to Haiku
                 max_tokens: 1500,
-                messages: [{ role: "user", content: prompt }]
+                messages: [
+                    { role: "user", content: prompt }
+                ]
             })
         });
 
@@ -32,16 +37,21 @@ exports.handler = async (event) => {
         if (!response.ok) {
             return {
                 statusCode: response.status,
-                body: JSON.stringify({ error: data.error?.message || "Anthropic API Error" })
+                body: JSON.stringify({ 
+                    error: data.error?.message || "Anthropic API Error" 
+                })
             };
         }
 
-        return { statusCode: 200, body: JSON.stringify(data) };
+        return {
+            statusCode: 200,
+            body: JSON.stringify(data)
+        };
 
     } catch (error) {
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: error.message })
+            body: JSON.stringify({ error: "Server Error: " + error.message })
         };
     }
 };
