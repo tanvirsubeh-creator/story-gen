@@ -1,21 +1,21 @@
 exports.handler = async (event) => {
+    // Only allow POST requests
     if (event.httpMethod !== "POST") {
-        return { 
-            statusCode: 405, 
-            body: JSON.stringify({ error: "Method Not Allowed" }) 
-        };
+        return { statusCode: 405, body: JSON.stringify({ error: "Method Not Allowed" }) };
     }
 
     try {
         const { prompt } = JSON.parse(event.body);
 
+        // Check for the API Key
         if (!process.env.ANTHROPIC_API_KEY) {
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: "Missing API Key in Netlify Settings" })
+                body: JSON.stringify({ error: "API Key missing in Netlify settings." })
             };
         }
 
+        // Call Anthropic API
         const response = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
@@ -24,22 +24,21 @@ exports.handler = async (event) => {
                 "anthropic-version": "2023-06-01"
             },
             body: JSON.stringify({
-                model: "claude-3-haiku-20240307", // Swapped to Haiku
-                max_tokens: 1500,
+                model: "claude-3-haiku-20240307",
+                max_tokens: 2000,
                 messages: [
-                    { role: "user", content: prompt }
+                    { "role": "user", "content": prompt }
                 ]
             })
         });
 
         const data = await response.json();
 
+        // Handle API Errors (like Overloaded or Balance)
         if (!response.ok) {
             return {
                 statusCode: response.status,
-                body: JSON.stringify({ 
-                    error: data.error?.message || "Anthropic API Error" 
-                })
+                body: JSON.stringify({ error: data.error?.message || "Anthropic API Error" })
             };
         }
 
