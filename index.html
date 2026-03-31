@@ -1,8 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Generator</title>
+</head>
+<body style="background:black;color:white;font-family:sans-serif;text-align:center;padding:40px;">
+
+    <h1>🔥 Viral Story Generator</h1>
+
+    <button id="genBtn" onclick="generateScript()">Generate Story</button>
+    <p id="status">Idle</p>
+
+    <h2 id="title"></h2>
+    <p id="views" style="color: #aaa; font-weight: bold;"></p>
+    <div id="body" style="max-width: 600px; margin: 20px auto; text-align: left; line-height: 1.6; white-space: pre-wrap;"></div>
+
+<script>
 async function generateScript() {
     const genBtn = document.getElementById('genBtn');
     const status = document.getElementById('status');
+    const titleEl = document.getElementById('title');
+    const viewsEl = document.getElementById('views');
+    const bodyEl = document.getElementById('body');
+
+    // Reset UI
     genBtn.disabled = true;
     status.innerText = 'Claude is writing...';
+    titleEl.innerText = '';
+    viewsEl.innerText = '';
+    bodyEl.innerText = '';
 
     const prompt = `Return ONLY valid JSON. { "title": "...", "body": "...", "views": "..." } Make it a viral TikTok story. Body must be 300+ words.`;
 
@@ -15,25 +42,34 @@ async function generateScript() {
 
         const data = await res.json();
 
-        // Check if the function returned an error before trying to read content
+        // Safety Check: If the function or API returned an error
         if (!res.ok || data.error) {
+            console.error("API Error:", data);
             status.innerText = 'Error: ' + (data.error || 'Check Console');
             genBtn.disabled = false;
             return; 
         }
 
+        // Get the text from Anthropic's response structure
         const contentText = data.content[0].text;
+        
+        // Parse the JSON string provided by Claude
         const parsed = JSON.parse(contentText);
 
-        document.getElementById('title').innerText = parsed.title;
-        document.getElementById('views').innerText = "👁 " + parsed.views;
-        document.getElementById('body').innerText = parsed.body;
+        // Update UI with results
+        titleEl.innerText = parsed.title;
+        viewsEl.innerText = "👁 " + parsed.views;
+        bodyEl.innerText = parsed.body;
 
         status.innerText = 'Ready!';
     } catch (err) {
-        console.error(err);
-        status.innerText = 'System Error (Check Console)';
+        console.error("System Error:", err);
+        status.innerText = 'System Error: ' + err.message;
     }
 
     genBtn.disabled = false;
 }
+</script>
+
+</body>
+</html>
