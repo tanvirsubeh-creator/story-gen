@@ -75,12 +75,7 @@
       font-size: 20px;
     }
 
-    .logo-text {
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-    }
-
+    .logo-text { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
     .logo-text span { color: var(--accent2); }
 
     .tagline {
@@ -178,7 +173,7 @@
       50% { opacity: 0.4; transform: scale(0.8); }
     }
 
-    .steps { display: none; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .steps { display: none; flex-direction: column; gap: 4px; margin-bottom: 16px; }
     .steps.visible { display: flex; }
 
     .step {
@@ -189,15 +184,14 @@
       font-size: 12px;
       color: var(--muted);
       transition: color 0.3s;
-      padding: 6px 0;
+      padding: 5px 0;
     }
 
     .step.active { color: var(--text); }
     .step.done { color: var(--success); }
     .step.failed { color: var(--error); }
-    .step-icon { font-size: 14px; width: 18px; text-align: center; }
+    .step-icon { font-size: 14px; width: 20px; text-align: center; }
 
-    /* Story preview card */
     .story-preview {
       display: none;
       background: rgba(124,58,237,0.06);
@@ -209,7 +203,7 @@
 
     .story-preview.visible { display: block; }
 
-    .story-preview-title {
+    .story-preview-label {
       font-size: 11px;
       font-weight: 700;
       color: var(--accent2);
@@ -247,12 +241,6 @@
     }
 
     .error-box.visible { display: block; }
-
-    .divider {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 20px 0;
-    }
   </style>
 </head>
 <body>
@@ -282,15 +270,16 @@
         </div>
 
         <div class="steps" id="steps">
-          <div class="step" id="step1"><span class="step-icon">✍️</span> Writing story with Claude...</div>
-          <div class="step" id="step2"><span class="step-icon">🎙️</span> Generating voiceover with ElevenLabs...</div>
-          <div class="step" id="step3"><span class="step-icon">☁️</span> Uploading audio to Cloudinary...</div>
-          <div class="step" id="step4"><span class="step-icon">🎬</span> Rendering video with Shotstack...</div>
-          <div class="step" id="step5"><span class="step-icon">✅</span> Done!</div>
+          <div class="step" id="step1"><span class="step-icon">✍️</span>Writing story with Claude...</div>
+          <div class="step" id="step2"><span class="step-icon">🎙️</span>Generating voiceover...</div>
+          <div class="step" id="step3"><span class="step-icon">☁️</span>Uploading audio...</div>
+          <div class="step" id="step4"><span class="step-icon">🎬</span>Submitting to Shotstack...</div>
+          <div class="step" id="step5"><span class="step-icon">⏳</span>Rendering video...</div>
+          <div class="step" id="step6"><span class="step-icon">✅</span>Done!</div>
         </div>
 
         <div class="story-preview" id="storyPreview">
-          <div class="story-preview-title">Generated Story</div>
+          <div class="story-preview-label">Generated Story</div>
           <div class="story-preview-heading" id="previewTitle"></div>
           <div class="story-preview-script" id="previewScript"></div>
         </div>
@@ -303,11 +292,9 @@
   <script>
     let videoUrl = null;
 
-    function setStep(id, state, icon) {
+    function setStep(id, state) {
       const el = document.getElementById(id);
-      if (!el) return;
-      el.className = 'step ' + state;
-      if (icon) el.querySelector('.step-icon').textContent = icon;
+      if (el) el.className = 'step ' + state;
     }
 
     function showError(msg) {
@@ -320,56 +307,74 @@
     }
 
     async function generateStory() {
-      const genBtn = document.getElementById('genBtn');
-      const exportBtn = document.getElementById('exportBtn');
-      const statusDot = document.getElementById('statusDot');
+      const genBtn     = document.getElementById('genBtn');
+      const exportBtn  = document.getElementById('exportBtn');
+      const statusDot  = document.getElementById('statusDot');
       const statusText = document.getElementById('statusText');
-      const steps = document.getElementById('steps');
-      const errorBox = document.getElementById('errorBox');
-      const storyPreview = document.getElementById('storyPreview');
-      const genreBadge = document.getElementById('genreBadge');
 
-      // Reset
+      // Reset UI
       genBtn.disabled = true;
       exportBtn.style.display = 'none';
-      errorBox.classList.remove('visible');
-      storyPreview.classList.remove('visible');
-      genreBadge.classList.remove('visible');
-      steps.classList.add('visible');
+      document.getElementById('errorBox').classList.remove('visible');
+      document.getElementById('storyPreview').classList.remove('visible');
+      document.getElementById('genreBadge').classList.remove('visible');
+      document.getElementById('steps').classList.add('visible');
       statusDot.className = 'dot active';
       videoUrl = null;
 
-      ['step1','step2','step3','step4','step5'].forEach(s => setStep(s, ''));
-
-      setStep('step1', 'active');
-      statusText.textContent = 'Writing story...';
+      ['step1','step2','step3','step4','step5','step6'].forEach(s => setStep(s, ''));
 
       try {
-        const res = await fetch('/.netlify/functions/generate', { method: 'POST' });
-        const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
-        if (!data.renderId) throw new Error('No render ID returned');
+        // ── CALL 1: generate (Claude + ElevenLabs + Cloudinary) ──
+        setStep('step1', 'active');
+        statusText.textContent = 'Writing story...';
 
-        // Show story details
-        if (data.title) {
-          document.getElementById('previewTitle').textContent = data.title;
-          document.getElementById('previewScript').textContent = data.script || '';
-          storyPreview.classList.add('visible');
+        const genRes = await fetch('/.netlify/functions/generate', { method: 'POST' });
+        const genData = await genRes.json();
+        if (!genRes.ok) throw new Error(genData.error || `Generate error ${genRes.status}`);
+
+        setStep('step1', 'done');
+        setStep('step2', 'done');
+        setStep('step3', 'done');
+
+        // Show story preview
+        document.getElementById('previewTitle').textContent = genData.title;
+        document.getElementById('previewScript').textContent = genData.script;
+        document.getElementById('storyPreview').classList.add('visible');
+
+        // Show genre badge
+        if (genData.genre) {
+          document.getElementById('genreLabel').textContent = genData.genre.toUpperCase();
+          document.getElementById('genreBadge').classList.add('visible');
         }
 
-        if (data.genre) {
-          document.getElementById('genreLabel').textContent = data.genre.toUpperCase();
-          genreBadge.classList.add('visible');
-        }
-
-        setStep('step1', 'done', '✍️');
-        setStep('step2', 'done', '🎙️');
-        setStep('step3', 'done', '☁️');
+        // ── CALL 2: render (Shotstack submit) ──
         setStep('step4', 'active');
+        statusText.textContent = 'Submitting to Shotstack...';
+
+        const renderRes = await fetch('/.netlify/functions/render', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            audioUrl:   genData.audioUrl,
+            title:      genData.title,
+            script:     genData.script,
+            genreColor: genData.genreColor,
+            genreBg:    genData.genreBg
+          })
+        });
+
+        const renderData = await renderRes.json();
+        if (!renderRes.ok) throw new Error(renderData.error || `Render error ${renderRes.status}`);
+        if (!renderData.renderId) throw new Error('No render ID returned');
+
+        setStep('step4', 'done');
+        setStep('step5', 'active');
         statusText.textContent = 'Rendering video...';
 
-        await pollStatus(data.renderId);
+        // ── CALL 3: poll until done ──
+        await pollStatus(renderData.renderId);
 
       } catch (e) {
         showError(e.message);
@@ -377,7 +382,7 @@
     }
 
     async function pollStatus(id) {
-      const maxAttempts = 72; // 6 minutes max (every 5s)
+      const maxAttempts = 72; // ~6 minutes
       let attempts = 0;
 
       return new Promise((resolve, reject) => {
@@ -392,9 +397,8 @@
           }
 
           try {
-            const res = await fetch(`/.netlify/functions/poll?id=${id}`);
+            const res  = await fetch(`/.netlify/functions/poll?id=${id}`);
             const data = await res.json();
-
             if (!res.ok) throw new Error(data.error || `Poll error ${res.status}`);
 
             document.getElementById('statusText').textContent = `Rendering... (${data.status})`;
@@ -403,20 +407,18 @@
               clearInterval(interval);
               videoUrl = data.url;
 
-              setStep('step4', 'done', '🎬');
-              setStep('step5', 'done', '✅');
+              setStep('step5', 'done');
+              setStep('step6', 'done');
 
               document.getElementById('statusDot').className = 'dot success';
               document.getElementById('statusText').textContent = '✓ Video ready!';
-              document.getElementById('previewScript').textContent =
-                document.getElementById('previewScript').textContent + '\n\n▶ Video is ready to download!';
               document.getElementById('exportBtn').style.display = 'block';
               document.getElementById('genBtn').disabled = false;
               resolve();
 
             } else if (data.status === 'failed') {
               clearInterval(interval);
-              showError('Shotstack render failed. Check your Shotstack dashboard for details.');
+              showError('Shotstack render failed. Check your Shotstack dashboard.');
               reject(new Error('render failed'));
             }
 
