@@ -1,36 +1,27 @@
 exports.handler = async (event) => {
-if (event.httpMethod !== “GET”) {
-return { statusCode: 405, body: “Method Not Allowed” };
-}
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Content-Type": "application/json"
+  };
 
-const renderId = event.queryStringParameters?.id;
-if (!renderId) {
-return { statusCode: 400, body: JSON.stringify({ error: “Missing render ID” }) };
-}
+  const renderId = event.queryStringParameters?.id;
+  if (!renderId) return { statusCode: 400, headers, body: JSON.stringify({ error: "No ID" }) };
 
-const SHOTSTACK_KEY = process.env.SHOTSTACK_API_KEY;
+  try {
+    const res = await fetch(`https://api.shotstack.io/stage/render/${renderId}`, {
+      headers: { "x-api-key": process.env.SHOTSTACK_API_KEY },
+    });
+    const data = await res.json();
 
-try {
-const res = await fetch(`https://api.shotstack.io/stage/render/${renderId}`, {
-headers: { “x-api-key”: SHOTSTACK_KEY },
-});
-
-```
-const data = await res.json();
-const status = data?.response?.status;
-const url = data?.response?.url;
-
-return {
-  statusCode: 200,
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ status, url }),
-};
-```
-
-} catch (err) {
-return {
-statusCode: 500,
-body: JSON.stringify({ error: err.message }),
-};
-}
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        status: data?.response?.status,
+        url: data?.response?.url
+      }),
+    };
+  } catch (err) {
+    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
+  }
 };
