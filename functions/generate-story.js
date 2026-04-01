@@ -37,7 +37,7 @@ exports.handler = async (event) => {
         max_tokens: 800,
         messages: [{
           role: "user",
-          content: "Write a " + genre.name + " short story for TikTok/YouTube Shorts.\nRules:\n- 160-180 words (must be at least 160 words)\n- Gripping hook first sentence\n- Surprising twist or emotional ending\n- third person \n- Short punchy sentences\nReturn ONLY valid JSON: {\"title\": \"MAX 5 WORDS ALL CAPS\", \"script\": \"the story\"}\nRaw JSON only. No markdown."
+          content: "Write a " + genre.name + " short story for TikTok/YouTube Shorts.\nRules:\n- 160-180 words (must be at least 160 words)\n- Gripping hook first sentence\n- Surprising twist or emotional ending\n- third person genre must not be funny \n- Short punchy sentences\nReturn ONLY valid JSON: {\"title\": \"MAX 5 WORDS ALL CAPS\", \"script\": \"the story\"}\nRaw JSON only. No markdown."
         }]
       })
     });
